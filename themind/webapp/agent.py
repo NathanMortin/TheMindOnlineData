@@ -1,6 +1,10 @@
 import random
 from webapp.state import State, State2, State3, State4
 from webapp.node import Node
+import numpy as np
+import math
+
+# random.seed(1)
 
 
 class Agent:
@@ -15,12 +19,28 @@ class Agent:
         self.main_action = None
         self.gamma = 0.99
         self.alpha = 0.01
-        self.exploration_rate = 0.5
+        self.last_exploration_rate = 0.5
         self.step_cost = -0.01
         self.cumulative_reward = 0
 
         self.current_time = 0
         self.clock_rate = 0
+        self.clock_mu = 1
+        self.clock_p_i = 1
+        self.exploration_rate = 0.5
+        self.decreasing_exp_rate = 0
+
+    def set_decreasing_exp_rate(self, r):
+        self.decreasing_exp_rate = r
+
+    def get_decreasing_exp_rate(self):
+        return self.decreasing_exp_rate
+
+    def set_clock_p_i(self, pi):
+        self.clock_p_i = pi
+
+    def get_clock_p_i(self):
+        return self.clock_p_i
 
     def add_to_cards(self, card):
         self.cards.append(card)
@@ -31,7 +51,14 @@ class Agent:
         self.cards = []
 
     def set_exploration_rate(self, e):
+        self.last_exploration_rate = self.exploration_rate
         self.exploration_rate = e
+
+    def get_exploration_rate(self):
+        return self.exploration_rate
+
+    def get_last_exploration_rate(self):
+        return self.last_exploration_rate
 
     def get_cards(self):
         return self.cards
@@ -48,8 +75,6 @@ class Agent:
 
     def play_card(self):
         min_card = self.get_minimum_card()
-        # if min_card != -1:
-        #     self.cards.remove(min_card)
         self.played = True
         return min_card
 
@@ -143,27 +168,20 @@ class Agent:
                 return node.get_act_reward().index(max(node.get_act_reward()))
         return random.randint(0, 1)
 
-    def update_table(self, f):
+    def update_table(self):
         in_list = False
         for i in range(len(self.table)):
             node = self.table[i]
             if node.state == self.current_state:
-                # f.write("\t\t\t<current_act_reward: " + str(node.get_act_reward()) + ") \n")
                 reward = self.current_reward + (self.gamma * self.get_max_reward(self.next_state)) + self.step_cost
                 self.table[i].act_reward[self.main_action] = \
                     (reward * self.alpha) + (self.table[i].act_reward[self.main_action] * (1-self.alpha))
-                if (reward * self.alpha) + (self.table[i].act_reward[self.main_action] * (1-self.alpha)) > 1.98:
-                    a =1
-                    # print("More than 1.98 !!")
-                # f.write("\t\t\t<next_act_reward: " + str(self.table[i].get_act_reward()) + ") \n")
                 in_list = True
                 break
         if not in_list:
             node = Node(self.current_state)
-            # f.write("\t\t\t<current_act_reward_new: " + str(node.get_act_reward()) + ") \n")
             reward = self.current_reward + (self.gamma * self.get_max_reward(self.next_state)) + self.step_cost
             node.set_act_reward(self.main_action, (reward * self.alpha))
-            # f.write("\t\t\t<next_act_reward_new: " + str(node.get_act_reward()) + ") \n")
             self.table.append(node)
 
     def get_table(self):
@@ -175,6 +193,49 @@ class Agent:
     def add_to_current_time(self):
         self.current_time += self.clock_rate
 
+    def add_to_current_time1(self):
+        noise = 0.6  # a fixed noise rate
+        rand = random.uniform(0, 1)
+        if rand < noise:
+            s = np.random.normal(self.clock_mu, 2, 1)
+            # instead of adding 1 to the current time, a random integer number will be added
+            #  to the current time which is randomly selected with a normal distribution using mu and sigma
+            self.current_time += abs(math.ceil(s[0]))
+        else:
+            self.current_time += self.clock_rate
+
+    def add_to_current_time2(self):
+        rand = np.random.binomial(1, self.get_clock_p_i())
+        if rand == 1:
+            self.current_time += self.clock_rate + 1
+        else:
+            self.current_time += self.clock_rate
+
+    def add_to_current_time3(self, n):
+        if self.get_clock_p_i() < 0.33:
+            self.current_time = n + 1  # f(n) = n agent counting time exactly like the steps
+        elif self.get_clock_p_i() < 0.66:
+            c = 2
+            self.current_time = math.ceil(c * n * math.log10(n) + 1)
+            # f(n) = c * n log(n) + 1 agent counting time faster, with an increasing speed-up as time passes
+        else:
+            b = 0.3
+            self.current_time = math.ceil(b * n / math.log10(n + 1))
+            # f(n) = b * n / log(n + 1) agent counting time faster, with an increasing speed-up as time passes
+
+    def add_to_current_time4(self, n):
+        if self.get_clock_p_i() < 0.33:
+            self.current_time = n + 1  # f(n) = n agent counting time exactly like the steps
+        elif self.get_clock_p_i() < 0.66:
+            c = 4
+            self.current_time = math.ceil(c * n * math.log10(n) + 1)
+            # f(n) = c * n log(n) + 1 agent counting time faster, with an increasing speed-up as time passes
+        else:
+            b = 0.4
+            self.current_time = math.ceil(b * n / math.log10(200 * n))
+            # f(n) = b * n / log(200 * n) agent counting time faster, with an increasing speed-up as time passes
+        print(self.player_id, ": ", self.current_time)
+
     def reset_current_time(self):
         self.current_time = 0
 
@@ -183,6 +244,9 @@ class Agent:
 
     def get_current_time(self):
         return self.current_time
+
+    def set_clock_mu(self, mu):
+        self.clock_mu = mu
 
 
 

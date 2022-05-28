@@ -2,6 +2,8 @@ import random
 from webapp.agent import Agent
 from enum import Enum
 
+# random.seed(0)
+
 
 class Action(Enum):
     NO_ACTION = -1
@@ -13,9 +15,16 @@ class Action(Enum):
 
 
 class Game:
-    def __init__(self, number_of_players, deck_size):
+    def __init__(self, game_settings):
+        # game settings
+        number_of_players = game_settings["number_of_players"]
+        deck_size = game_settings["deck_size"]
+        number_of_levels = game_settings["number_of_levels"]
+        number_of_lives = game_settings["number_of_lives"]
+
         # game rules
-        self.number_of_levels_rule = {2: 1, 3: 1, 4: 1}  # TODO number_of_levels_rule
+        self.number_of_levels_rule = {2: number_of_levels, 3: number_of_levels, 4: number_of_levels}
+        # TODO number_of_levels_rule
         self.deck_size = deck_size
         self.number_of_players = number_of_players
         self.number_of_levels = self.get_number_of_levels()
@@ -26,16 +35,17 @@ class Game:
         self.players = []
         for i in range(number_of_players):
             player = Agent(i)
-            player.set_clock_rate(random.randint(0, 10))  # TODO: is added for time distortion
+            player.set_clock_rate(1)
+            player.set_clock_p_i(random.uniform(0, 1))
             self.players.append(player)
 
         # reset parameters & distribute cards
         self.deck = list(range(1, deck_size + 1))
-        self.game_time = 1
-        self.level_time = 1
+        self.game_time = 0
+        self.level_time = 0
         self.current_card = 0
         self.current_level = 1
-        self.number_of_lives = 1  # TODO number_of_players
+        self.number_of_lives = number_of_lives  # TODO number_of_players
         self.number_of_throwing_stars = 1
         self.level_cards = []
         self.players_cards = []
@@ -79,7 +89,7 @@ class Game:
         return self.number_of_throwing_stars
 
     def level_up(self):
-        self.level_time = 1
+        self.level_time = 0
         # self.deck = list(range(1, self.deck_size+1))
         # rules about lives and throwing stars card
         level_reward = 0
@@ -109,7 +119,6 @@ class Game:
             self.distribute_cards()
         self.current_card = 0
 
-        # reset agent current time TODO: add for time distortion
         for i in range(self.number_of_players):
             self.players[i].reset_current_time()
         return level_reward
@@ -210,8 +219,17 @@ class Game:
                         self.players_secondary_actions[i].remove(Action.TURN_ON_THROWING_STAR_CARD.value)
                     # self.players_throwing_star_flag[i] = True
 
-    def run_game(self, number_of_games, common_pay_off, setting_state, last_games_with_zero_exploitation,
-                 sample_rate, f):
+    def run_game(self, execution_settings):
+
+        # execution settings
+        number_of_games = execution_settings["number_of_games"]
+        common_pay_off = execution_settings["common_pay_off"]
+        setting_state = execution_settings["setting_state"]
+        last_games_with_exp0 = execution_settings["last_games_with_exp0"]
+        sample_rate = execution_settings["sample_rate"]
+        time_distortion = execution_settings["time_distortion"]
+        decreasing_exp = execution_settings["decreasing_exp"]
+        reset_level_time = execution_settings["reset_level_time"]
 
         # results initialization
         learning_wins = 0
@@ -222,9 +240,23 @@ class Game:
         num_of_wrong = 0
         num_of_out = 0
         game_result = True
+        last_game_i = 0
+        exp0_flag = False
+        exp0_samples = []
+        game_i = 0
+
+        # Each agent has a characteristic which is mu (a random number between 1 to 4)
+        if time_distortion:
+            for i in range(self.number_of_players):
+                self.players[i].set_clock_mu(random.randint(1, 4))
+
+        if decreasing_exp:
+            for i in range(self.number_of_players):
+                self.players[i].set_decreasing_exp_rate(self.players[i].get_exploration_rate() /
+                                                        (number_of_games + number_of_games/10))
 
         # execution of games
-        for game_i in range(number_of_games):
+        while game_i in range(number_of_games):
 
             # update number of cards which are not played
             num_of_out += len(self.level_cards)
@@ -247,7 +279,7 @@ class Game:
                             players_main_actions.insert(i, Action.NO_ACTION)
                             players_secondary_actions.insert(i, Action.NO_ACTION)
                             continue
-                        # TODO: self.level_time is changed for time distortion
+
                         main_act, secondary_act = self.players[i].make_decision(self.current_card, self.deck_size,
                                                                                 self.players[i].get_current_time(),
                                                                                 self.players_throwing_star_flag,
@@ -307,7 +339,7 @@ class Game:
                         else:
                             self.players[i].wait()
 
-                    # calculating the reward in non common pay off mode
+                    # calculating the reward in non common pay off mode & reset the level time for eah agent if needed
                     if common_pay_off:
                         if Action.PLAY in players_main_actions:  # if one player played a card
                             for p in self.players:
@@ -318,6 +350,9 @@ class Game:
 
                                 p.set_current_reward(p.get_reward(game_result))  # set the reward based on the result
 
+                                if reset_level_time:
+                                    p.reset_current_time()
+
                     # update the table of agent who played or waited
                     for i in range(self.number_of_players):
 
@@ -325,16 +360,14 @@ class Game:
                         if i in self.players_out_index:
                             continue
 
-                        # set the next state TODO: self.level_time+1 is changed for time distortion
                         self.players[i].set_next_state(self.current_card, self.deck_size, self.players[i].get_next_time(),
                                                        self.players_throwing_star_flag,
                                                        self.get_number_of_other_players_cards(i),
                                                        setting_state)
 
-
                         # check whether the agent could play or wait and the game was not stopped
                         if self.players[i].get_played():
-                            self.players[i].update_table(f)  # update Q-table
+                            self.players[i].update_table()  # update Q-table
 
                         # check that agent has at least one card
                         if len(self.players_cards[i]) == 0:
@@ -343,12 +376,16 @@ class Game:
                     # increment level time
                     self.level_time += 1
 
-                    # increase agents time TODO: add for time distortion
                     for i in range(self.number_of_players):
                         self.players[i].add_to_current_time()
+                        # self.players[i].add_to_current_time1()
+                        # self.players[i].add_to_current_time2()
+                        # self.players[i].add_to_current_time3(self.level_time)
+                        # self.players[i].add_to_current_time4(self.level_time)
 
                 # all cards are played or are out
                 else:
+                    # print("end of level!")
                     level_reward = self.level_up()
                     num_of_out += len(self.level_cards)
 
@@ -356,8 +393,26 @@ class Game:
                 self.game_time += 1
 
             # end of game
+            # print("game_result: ", game_result)
+            if (not exp0_flag and game_i < (number_of_games-last_games_with_exp0)) and decreasing_exp:
+                for i in range(self.number_of_players):
+                    self.players[i].set_exploration_rate(
+                        self.players[i].get_exploration_rate() - self.players[i].get_decreasing_exp_rate())
+
+            # check the starting of the last games with zero exploitation
+            if game_i == (number_of_games-last_games_with_exp0-1):
+                for j in range(self.number_of_players):
+                    self.players[j].set_exploration_rate(0)  # set exploration rate equal to zero for all agents
+
+            # check the game counter during the last games with zero exploitation
+            if game_i >= (number_of_games-last_games_with_exp0):
+
+                # winning if there is at least one life (with zero exploration rate)
+                if self.number_of_lives > 0:
+                    learning_wins += 1
 
             # winning if there is at least one life
+            # if not exp0_flag:
             if self.number_of_lives > 0:
                 self.number_of_wins += 1
                 sample_wins += 1
@@ -366,53 +421,44 @@ class Game:
             else:
                 self.number_of_losses += 1
 
-            if game_i % sample_rate == (sample_rate - 2):
-                # make all exploration rates 0 TODO: for exp0 sampling
+            if exp0_flag:
+                exp0_samples.append(int(game_result))
+
+            if game_i % (10*sample_rate) == ((10*sample_rate) - sample_rate - 1):
+                # make all exploration rates 0
                 for i in range(self.number_of_players):
                     self.players[i].set_exploration_rate(0)
+                last_game_i = game_i
+                exp0_flag = True
+                # if game_i % sample_rate == (sample_rate - 1):
+                list_of_sample_wins.append(sample_wins)  # append number of wins in sample range
+                sample_wins = 0  # reset sample wins counter
+                # else:
+                #     a = 1
 
             # check game counter is equal to sample rate
-            elif game_i % sample_rate == (sample_rate - 1):
+            if (not exp0_flag or game_i >= (number_of_games-last_games_with_exp0)) and game_i % sample_rate == (sample_rate - 1) and not (game_i % (10*sample_rate) == ((10*sample_rate) - sample_rate - 1)):
                 list_of_sample_wins.append(sample_wins)  # append number of wins in sample range
                 sample_wins = 0  # reset sample wins counter
 
-                # make all exploration rates 0 TODO: for exp0 sampling
+            if exp0_flag and game_i == last_game_i + sample_rate:
+                if game_i != (number_of_games - 1):
+                    game_i = last_game_i
+                # make all exploration rates 0
                 for i in range(self.number_of_players):
-                    self.players[i].set_exploration_rate(0.5)
-                list_of_exp0_samples.append(int(game_result))  # TODO: exp0 sampling
-
-            # check the starting of the last games with zero exploitation
-            if game_i == (number_of_games-last_games_with_zero_exploitation-1):
-                for j in range(self.number_of_players):
-                    self.players[j].set_exploration_rate(0)  # set exploration rate equal to zero for all agents
-                    f.write("\t~player " + str(j) + "table size: "+str(len(self.players[j].get_table()))+"\n")
-
-            # check the game counter during the last games with zero exploitation
-            if game_i >= (number_of_games-last_games_with_zero_exploitation):
-
-                # winning if there is at least one life (with zero exploration rate)
-                if self.number_of_lives > 0:
-                    learning_wins += 1
+                    self.players[i].set_exploration_rate(self.players[i].get_last_exploration_rate())
+                exp0_flag = False
+                sum_exp0_samples = sum(exp0_samples)
+                list_of_exp0_samples.append(sum_exp0_samples)
+                exp0_samples = []
 
             # restart game
             self.restart_game()
+            game_i += 1
 
         # update number of out card
         num_of_out -= (num_of_wrong + num_of_correct)
 
-        f.write("\tnumber_of_wins: "+str(self.number_of_wins) + "\n")
-        f.write("\tnumber_of_losses: "+str(self.number_of_losses) + "\n")
-        f.write("\tnumber_of_learning_wins: "+str(learning_wins) + "\n")
-        f.write("\tnum_of_correct: "+str(num_of_correct) + "\n")
-        f.write("\tnum_of_wrong: "+str(num_of_wrong) + "\n")
-        f.write("\tnum_of_out: "+str(num_of_out) + "\n\n")
-        print("\tnumber_of_wins: "+str(self.number_of_wins) + "\n")
-        print("\tnumber_of_losses: "+str(self.number_of_losses) + "\n")
-        print("\tnumber_of_learning_wins: "+str(learning_wins) + "\n")
-        print("\tnum_of_correct: "+str(num_of_correct) + "\n")
-        print("\tnum_of_wrong: "+str(num_of_wrong) + "\n")
-        print("\tnum_of_out: "+str(num_of_out) + "\n\n")
-        # TODO: list_of_exp0_samples added for exp0 sampling
         return [self.number_of_wins, self.number_of_losses, learning_wins, list_of_sample_wins, list_of_exp0_samples,
                 [num_of_correct, num_of_wrong, num_of_out]]
 
@@ -420,11 +466,11 @@ class Game:
 
         # reset parameters & distribute cards
         self.deck = list(range(1, self.deck_size + 1))
-        self.game_time = 1
-        self.level_time = 1
+        self.game_time = 0
+        self.level_time = 0
         self.current_card = 0
         self.current_level = 1
-        self.number_of_lives = 1  # TODO: self.number_of_players
+        self.number_of_lives = 2  # TODO: self.number_of_players
         self.number_of_throwing_stars = 1
         self.level_cards = []
         self.players_cards = []
@@ -438,7 +484,7 @@ class Game:
             self.players_cards.append([])
             self.players_main_actions.append([])
             self.players_secondary_actions.append([])
-            self.players[i].reset_current_time()  # TODO: add for time distortion
+            self.players[i].reset_current_time()
 
         # distribute cards and make game ready
         self.distribute_cards()

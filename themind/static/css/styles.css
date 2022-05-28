@@ -88,13 +88,13 @@ h2 {
   clear: both; }
 
 body {
-  font-size: 14px;
+  font-size: 24px;
   line-height: 1.8;
   color: #222;
   font-weight: 400;
   font-family: 'IRANSans';
-  background-image: url("../images/signup-bg-sup.jpg");
-  background-repeat: no-repeat;
+  /*background-image: url("../images/signup-bg-sup.jpg");*/
+  /*background-repeat: no-repeat;*/
   background-size: cover;
   -moz-background-size: cover;
   -webkit-background-size: cover;
