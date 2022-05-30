@@ -151,13 +151,18 @@ class Console:
                         with open(self.record_file_name, 'w') as result_file:
                             result_file.write(dom.toprettyxml())
 
+                        return self.record
+
                     all_executions.append(experiment)
         elapsed_time = running_time.stop()
 
         all_executions_dictionary = {"experiment": experiment for experiment in all_executions}
         self.record["all_executions"] = all_executions_dictionary
         self.record["total_elapsed_time"] = round(elapsed_time, 4)
+        self.record["record_file_name"] = self.record_file_name
         xml = dicttoxml(self.record, attr_type=False)
         dom = parseString(xml)
         with open(self.record_file_name, 'w') as result_file:
             result_file.write(dom.toprettyxml())
+
+        return self.record

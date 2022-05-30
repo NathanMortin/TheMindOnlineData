@@ -46,22 +46,22 @@
               <use xlink:href="#icon-coffee" href="#icon-coffee" />
             </svg>Game Settings</h2>
             <label class="input">
-              <input class="input__field" type="text" placeholder=" " value="2" />
+              <input class="input__field" type="text" placeholder=" " value="2" id="number_of_players"/>
               <span class="input__label">Number of players</span>
             </label>
               <label class="input">
-              <input class="input__field" type="text" placeholder=" " value="20" />
+              <input class="input__field" type="text" placeholder=" " value="20" id="deck_size"/>
               <span class="input__label">Deck size</span>
             </label>
               <label class="input">
-              <input class="input__field" type="text" placeholder=" " value="2" />
+              <input class="input__field" type="text" placeholder=" " value="2" id="setting_state"/>
               <span class="input__label">Setting state</span>
             </label>
 
-            <div class="button-group">
+            <!--<div class="button-group">
               <button>Send</button>
               <button type="reset">Reset</button>
-            </div>
+            </div>-->
           </div>
 
 
@@ -70,72 +70,76 @@
               <use xlink:href="#icon-coffee" href="#icon-coffee" />
             </svg>Execution Settings</h2>
             <label class="input">
-              <input class="input__field" type="text" placeholder="" value="1000" />
+              <input class="input__field" type="text" placeholder="" value="1000" id="number_of_games"/>
               <span class="input__label">Number of games</span>
             </label>
                 <label class="input">
-              <input class="input__field" type="text" placeholder="" value="200" />
+              <input class="input__field" type="text" placeholder="" value="200" id="last_games_with_exp0"/>
               <span class="input__label">Last games with exp0</span>
             </label>
                 <label class="input">
-              <input class="input__field" type="text" placeholder="" value="100" />
+              <input class="input__field" type="text" placeholder="" value="100" id="sample_rate"/>
               <span class="input__label">Sample rate</span>
             </label>
                 <label class="input">
-              <input class="input__field" type="text" placeholder="" value="5" />
+              <input class="input__field" type="text" placeholder="" value="1" id="number_of_repetition"/>
               <span class="input__label">Number of repetition</span>
             </label>
                 <label class="input">
-              <input class="input__field" type="text" placeholder="" value="5" />
+              <input class="input__field" type="text" placeholder="" value="2" id="number_of_levels"/>
               <span class="input__label">Number of levels</span>
             </label>
+                <label class="input">
+                  <input class="input__field" type="text" placeholder="" value="2" id="number_of_lives"/>
+                  <span class="input__label">Number of lives</span>
+                </label>
 
                 <div id="radio_input_box">
                     <h3>Common pay off:</h3>
                     <label id="radio_input_box">
-                        <input type="radio" name="common_pay_off" checked/>
+                        <input type="radio" name="common_pay_off" value="True" checked/>
                         <span>Yes</span>
                     </label>
                     <label id="radio_input_box">
-                        <input type="radio" name="common_pay_off"/>
+                        <input type="radio" name="common_pay_off" value="False"/>
                         <span>No</span>
                     </label>
                     <br>
                     <h3>Time distortion:</h3>
                     <label id="radio_input_box">
-                        <input type="radio" name="time_distortion"/>
+                        <input type="radio" name="time_distortion" value="True"/>
                         <span>Yes</span>
                     </label>
                     <label id="radio_input_box">
-                        <input type="radio" name="time_distortion" checked/>
+                        <input type="radio" name="time_distortion" value="False" checked/>
                         <span>No</span>
                     </label>
                     <br>
                     <h3>Decreasing exploration rate:</h3>
                     <label id="radio_input_box">
-                        <input type="radio" name="decreasing_exp"/>
+                        <input type="radio" name="decreasing_exp" value="True"/>
                         <span>Yes</span>
                     </label>
                     <label id="radio_input_box">
-                        <input type="radio" name="decreasing_exp" checked/>
+                        <input type="radio" name="decreasing_exp" value="False" checked/>
                         <span>No</span>
                     </label>
                     <br>
                     <h3>Reset level time:</h3>
                     <label id="radio_input_box">
-                        <input type="radio" name="reset_level_time"/>
+                        <input type="radio" name="reset_level_time" value="True"/>
                         <span>Yes</span>
                     </label>
                     <label id="radio_input_box">
-                        <input type="radio" name="reset_level_time" checked/>
+                        <input type="radio" name="reset_level_time" value="False" checked/>
                         <span>No</span>
                     </label>
                 </div>
 
-            <div class="button-group">
+            <!--<div class="button-group">
               <button>Send</button>
               <button type="reset">Reset</button>
-            </div>
+            </div>-->
           </div>
 
             <div class="card">
@@ -145,6 +149,18 @@
                                 style="padding: 20px 100px;"> Run!
                         </button>
                 <h4 id="status"></h4>
+                <br>
+                <h4 id="winning_rate"></h4>
+                <h4 id="winning_rate_with_exploration_rate_0"></h4>
+                <h4 id="avg_num_of_correct_play"></h4>
+                <h4 id="avg_learning_wins"></h4>
+                <h4 id="avg_number_of_losses"></h4>
+                <h4 id="avg_number_of_wins"></h4>
+                <br>
+                <h4 id="show_the_results">
+                    {% csrf_token %}
+                    <a id="results_link" href="/showTheResults/">**PLOT RESULTS CHART**</a>
+                </h4>
             </div>
           </div>
 
@@ -180,6 +196,10 @@
 <!--<script src="vendor/jquery/jquery.min.js"></script>-->
 <script src="{% static 'js/main.js' %}"></script>
 <script language="javascript">
+    window.onload = function() {
+        $("#show_the_results").hide();
+    };
+
     let timer;
 
     document.addEventListener('input', e => {
@@ -223,22 +243,69 @@
         }
     });
 
+    var record_data;
+    var record_filename
     function runTheCode() {
         $("#submit").hide();
         document.getElementById("status").textContent="In progress ...";
+        var number_of_players = $('#number_of_players').val();
+        var deck_size = $('#deck_size').val();
+        var setting_state = $('#setting_state').val();
+
+        var number_of_games = $('#number_of_games').val();
+        var last_games_with_exp0 = $('#last_games_with_exp0').val();
+        var sample_rate = $('#sample_rate').val();
+        var number_of_repetition = $('#number_of_repetition').val();
+        var number_of_levels = $('#number_of_levels').val();
+        var number_of_lives = $('#number_of_lives').val();
+
+        var common_pay_off = $("input[name=common_pay_off]:checked").val();
+        var time_distortion = $("input[name=time_distortion]:checked").val();
+        var decreasing_exp = $("input[name=decreasing_exp]:checked").val();
+        var reset_level_time = $("input[name=reset_level_time]:checked").val();
+
             $.ajax({
                 //headers: {"X-CSRFToken": token},
                 type: 'POST',
                 url: '/run_the_code/',
                 data: {
+                    number_of_players: number_of_players,
+                    deck_size: deck_size,
+                    setting_state: setting_state,
+                    number_of_games: number_of_games,
+                    last_games_with_exp0: last_games_with_exp0,
+                    sample_rate: sample_rate,
+                    number_of_repetition: number_of_repetition,
+                    number_of_levels: number_of_levels,
+                    number_of_lives: number_of_lives,
+                    common_pay_off: common_pay_off,
+                    time_distortion: time_distortion,
+                    decreasing_exp: decreasing_exp,
+                    reset_level_time: reset_level_time
+
                 },
                 success: function (data)
                 {
                     alert("Done!");
-                    document.getElementById("status").textContent="The reports are ready!";
+                    document.getElementById("status").textContent = "The reports are ready!";
+                    document.getElementById("winning_rate").textContent = "winning rate: " .concat(String(data.all_executions.experiment.winning_rate));
+                    document.getElementById("winning_rate_with_exploration_rate_0").textContent = ("\nwinning rate with exploration rate 0: " .concat(String(data.all_executions.experiment.winning_rate_with_exploration_rate_0)));
+                    document.getElementById("avg_num_of_correct_play").textContent=("\naverage num of correct play: " .concat(String(data.all_executions.experiment.avg_num_of_correct_play)));
+                    document.getElementById("avg_learning_wins").textContent=("\naverage learning wins: " .concat(String(data.all_executions.experiment.avg_learning_wins)));
+                    document.getElementById("avg_number_of_losses").textContent=("\naverage number of losses: " .concat(String(data.all_executions.experiment.avg_number_of_losses)));
+                    document.getElementById("avg_number_of_wins").textContent=("\naverage number of wins: " .concat(String(data.all_executions.experiment.avg_number_of_wins)));
+                    record_data = data;
+                    record_filename = data.record_file_name;
+                    showTheResults();
                 }
             });
 }
+    function showTheResults()
+        {
+            $("#show_the_results").show();
+            {#$("#results_link").attr("href", "/show_the_results?record_filename=".concat(record_filename))#}
+        }
+
 </script>
 
 </body>
