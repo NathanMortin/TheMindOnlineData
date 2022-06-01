@@ -6,6 +6,12 @@ urlpatterns = [
     re_path('^$', views.index, name='index'),
     re_path('^run_the_code/$', views.run_the_code, name='run_the_code'),
     re_path('^showTheResults/$', views.show_the_results),
+    # re_path(r'^results/(?P<id>\w+)/$', views.results),
+    # re_path(r"^results/(?P<key>)/$", views.results,
+    #         name="results")
+    path('results/<input>', views.results),
+    path('analyzer/', views.analyzer),
+    path('upload/', views.upload)
     # re_path(r'^show_the_results/(?P<input_name>\D+)/', views.show_the_results)
     # re_path(r'showTheResults/(?P<incubator_id>\w+)/$', views.show_the_results, name="showTheResults"),
     # re_path(r'^showTheResults/(?P<input_name>\w+)/$', views.show_the_results, name="showTheResults"),

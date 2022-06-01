@@ -161,6 +161,7 @@
                     {% csrf_token %}
                     <a id="results_link" href="/showTheResults/">**PLOT RESULTS CHART**</a>
                 </h4>
+                <a id="results_link2" href="/results?filename=sara">**PLOT RESULTS CHART**</a>
             </div>
           </div>
 
@@ -244,7 +245,7 @@
     });
 
     var record_data;
-    var record_filename
+    var record_filename;
     function runTheCode() {
         $("#submit").hide();
         document.getElementById("status").textContent="In progress ...";

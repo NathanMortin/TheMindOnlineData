@@ -3,6 +3,12 @@ from webapp.main_board import MainBoard
 from django.shortcuts import render
 from webapp.main_board import MainBoard
 from django.http import JsonResponse
+import os
+from django.core.files.storage import FileSystemStorage
+import errno
+import random
+from django.conf import settings
+BASE_DIR = settings.BASE_DIR
 
 
 def index(request):
@@ -54,4 +60,65 @@ def run_the_code(request):
 
 def show_the_results(request):
     return render(request, 'webapp/results.html')
+
+
+def results(request):
+    return HttpResponse("Hello, world. You're at the polls index.")
+
+
+def analyzer(request):
+    return render(request, 'webapp/analyzer.html')
+
+
+def __silent_remove(target_file_path):
+    """
+    :param target_file_path: str
+    :return: None or raise an unhandled exception
+    """
+    try:
+        os.remove(target_file_path)
+    except OSError as e:
+        if e.errno != errno.ENOENT:
+            raise e
+
+
+def __save_uploaded_file(file):
+    """
+    :param file:
+    :return:
+    """
+    file_name, file_extension = str(file.name).rsplit('.', 1)
+
+    if file_extension != 'xml':
+        return None
+
+    file_new_name = f'{file_name.replace(".", "_")}-{random.randint(1, 1000)}.xml'  # make random name for avoid concurrent upload problem
+    FileSystemStorage().save(file_new_name, file)  # save file in BASIC-DIR for getting its size
+    file_size = os.stat(file_new_name).st_size
+
+    if file_size == 0:
+        __silent_remove(file_new_name)
+        return None
+
+    return file_new_name
+
+
+def upload(request):
+    is_xml: bool = False
+    response_data = {}
+
+    if request.method == 'POST' and request.FILES['file']:
+        try:
+            uploaded_file_name = __save_uploaded_file(request.FILES['file'])
+            if uploaded_file_name:  # set requested values
+                is_xml = True
+        except Exception as e:
+            # clear all
+            is_xml: bool = False
+
+        response_data = {
+                'is_xml': is_xml}
+
+    return JsonResponse(response_data)
+
 

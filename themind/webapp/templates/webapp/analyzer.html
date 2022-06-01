@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link media="all" type="text/css" rel="stylesheet" href="{% static 'css/dropzone.css' %}">
+    <script language="JavaScript" type="text/javascript" src="{% static 'js/dropzone.js' %}"></script>
+</head>
+<body>
+    <div class="main">
+        <section class="signup">
+            <center>
+                <div id="dropzone">
+                        <form action="/upload/" method="POST" accept-charset="UTF-8" class="dropzone"
+                              id="my-dropzone" enctype="multipart/form-data"><input name="_token" type="hidden"
+                                                                                    value="VsjcIJP304OzNV4lstwbZhujEiaGf6Osczoo4VZP">
+                            {% csrf_token %}
+                            <!-- Multiple file upload-->
+                            <div class="dz-message">
+                                <center>
+                                    <i style="font-size:45px" class="fas fa-cloud-upload-alt"></i>
+                                    <!-- <i style="font-size:45px" class="fa fa-cloud-upload fa-2x"></i> -->
+                                    <h4>Drag your result file </h4>
+                                    <span>or click here</span></center>
+                            </div>
+                            <div class="fallback">
+                                <input name="file" type="file" multiple id="input-file"/>
+                            </div>
+                        </form>
+                </div>
+            </center>
+        </section>
+    </div>
+    <script language="javascript">
+        var is_docx;
+
+        Dropzone.options.myDropzone = {
+            maxFiles: 1,
+            maxFilesize: 13,
+            init: function () {
+                this.on("maxfilesexceeded", function (file) {
+
+                });
+                this.on("success", function (file, response) {
+                    if (this.getQueuedFiles().length === 0) {
+                        // Your application has indicated there's an error
+                        var inputstr = file.name;
+                        is_docx = response.is_xml;
+                        if (is_docx == false) {
+                            alert("فایل خالی است! لطفا دوباره تلاش کنید.");
+                        }
+
+                    }
+                });
+                this.on("complete", function (file) {
+                    if (is_docx == false) {
+                        this.removeFile(file);
+                    }
+                });
+            }
+        };
+
+
+    </script>
+</body>
+</html>
