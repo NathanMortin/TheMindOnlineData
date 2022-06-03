@@ -393,6 +393,8 @@ class Game:
                 self.game_time += 1
 
             # end of game
+            if game_i == 17:
+                a = 1
             # print("game_result: ", game_result)
             if (not exp0_flag and game_i < (number_of_games-last_games_with_exp0)) and decreasing_exp:
                 for i in range(self.number_of_players):
@@ -451,6 +453,7 @@ class Game:
                 sum_exp0_samples = sum(exp0_samples)
                 list_of_exp0_samples.append(sum_exp0_samples)
                 exp0_samples = []
+                sample_wins = 0
 
             # restart game
             self.restart_game()

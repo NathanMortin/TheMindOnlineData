@@ -159,9 +159,9 @@
                 <br>
                 <h4 id="show_the_results">
                     {% csrf_token %}
-                    <a id="results_link" href="/showTheResults/">**PLOT RESULTS CHART**</a>
+                    <a id="results_link" href="/results/">**PLOT RESULTS CHART**</a>
                 </h4>
-                <a id="results_link2" href="/results?filename=sara">**PLOT RESULTS CHART**</a>
+                <!--<a id="results_link2" href="/results?filename=sara">**PLOT RESULTS CHART**</a>-->
             </div>
           </div>
 
@@ -304,7 +304,7 @@
     function showTheResults()
         {
             $("#show_the_results").show();
-            {#$("#results_link").attr("href", "/show_the_results?record_filename=".concat(record_filename))#}
+            $("#results_link").attr("href", "/results/?record_filename=".concat(record_filename))
         }
 
 </script>

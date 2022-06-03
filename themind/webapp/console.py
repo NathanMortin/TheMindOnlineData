@@ -5,33 +5,36 @@ from xml.dom.minidom import parseString
 
 
 class Console:
-
     record = {}
 
     def __init__(self, game_setup):
-        self.game_settings, self.execution_settings = game_setup
+        self.console_settings, self.game_settings, self.execution_settings = game_setup
         self.record_file_name = Timer.get_current_date() + "_" + Timer.get_current_time() + ".xml"
 
+    @staticmethod
+    def get_record_file_name():
+        return Timer.get_current_date() + "_" + Timer.get_current_time()
+
     def run(self):
-        list_of_num_of_players = self.game_settings["list_of_num_of_players"]
-        list_of_deck_size = self.game_settings["list_of_deck_size"]
-        list_of_setting_states = self.game_settings["list_of_setting_states"]
-        self.record["game_settings"] = self.game_settings
+        list_of_num_of_players = self.console_settings["list_of_num_of_players"]
+        list_of_deck_size = self.console_settings["list_of_deck_size"]
+        list_of_setting_states = self.console_settings["list_of_setting_states"]
 
         number_of_games = self.execution_settings["number_of_games"]
         number_of_repetition = self.execution_settings["number_of_repetition"]
         last_games_with_exp0 = self.execution_settings["last_games_with_exp0"]
         sample_rate = self.execution_settings["sample_rate"]
-        self.record["execution_settings"] = self.execution_settings
 
         running_time = Timer(name="run_all_code")
         running_time.start()
-        all_executions = []
+
+        file_counter = 1
         for number_of_players in list_of_num_of_players:
             for deck_size in list_of_deck_size:
                 for setting_state in list_of_setting_states:
                     self.game_settings["number_of_players"] = number_of_players
                     self.game_settings["deck_size"] = deck_size
+
                     self.execution_settings["setting_state"] = setting_state
 
                     t = Timer(name="run_game")
@@ -142,27 +145,29 @@ class Console:
 
                     except Exception as e:
                         print("Error!!", e)
-                        all_executions.append(experiment)
 
-                        all_executions_dictionary = {"experiment": experiment for experiment in all_executions}
-                        self.record["all_executions"] = all_executions_dictionary
+                        self.record["game_settings"] = self.game_settings
+                        self.record["execution_settings"] = self.execution_settings
+                        self.record["experiment"] = experiment
+                        record_filename = self.get_record_file_name()+str(file_counter)+".xml"
+                        self.record["record_file_name"] = record_filename
                         xml = dicttoxml(self.record, attr_type=False)
                         dom = parseString(xml)
-                        with open(self.record_file_name, 'w') as result_file:
+                        with open("records/" + record_filename, 'w') as result_file:
                             result_file.write(dom.toprettyxml())
 
                         return self.record
 
-                    all_executions.append(experiment)
+                    self.record["game_settings"] = self.game_settings
+                    self.record["execution_settings"] = self.execution_settings
+                    self.record["experiment"] = experiment
+                    record_filename = self.get_record_file_name() + str(file_counter) + ".xml"
+                    self.record["record_file_name"] = record_filename
+                    xml = dicttoxml(self.record, attr_type=False)
+                    dom = parseString(xml)
+                    with open("records/" + record_filename, 'w') as result_file:
+                        result_file.write(dom.toprettyxml())
+                    file_counter += 1
         elapsed_time = running_time.stop()
-
-        all_executions_dictionary = {"experiment": experiment for experiment in all_executions}
-        self.record["all_executions"] = all_executions_dictionary
-        self.record["total_elapsed_time"] = round(elapsed_time, 4)
-        self.record["record_file_name"] = self.record_file_name
-        xml = dicttoxml(self.record, attr_type=False)
-        dom = parseString(xml)
-        with open(self.record_file_name, 'w') as result_file:
-            result_file.write(dom.toprettyxml())
-
+        print(elapsed_time)
         return self.record

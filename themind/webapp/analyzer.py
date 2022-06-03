@@ -62,7 +62,7 @@ class Analyzer:
         return new_var
 
 
-game_analyzer = Analyzer("May-18-2022_17-06-49.xml")
-game_analyzer.interpretation()
+# game_analyzer = Analyzer("May-18-2022_17-06-49.xml")
+# game_analyzer.interpretation()
 
 

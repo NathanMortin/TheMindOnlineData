@@ -8,6 +8,9 @@ from django.core.files.storage import FileSystemStorage
 import errno
 import random
 from django.conf import settings
+from django.shortcuts import redirect, render
+from .analyzer import Analyzer
+import numpy as np
 BASE_DIR = settings.BASE_DIR
 
 
@@ -58,12 +61,46 @@ def run_the_code(request):
     return JsonResponse(record)
 
 
-def show_the_results(request):
-    return render(request, 'webapp/results.html')
+def show_the_results(request, record_filename="saa"):
+    game_analyzer = Analyzer('records/'+record_filename)
+    game_analyzer.interpretation()
+    xml_dict = game_analyzer.get_xml_dict()
+    avg_exp0_samples = xml_dict["root"]["experiment"]["avg_exp0_samples"]
+    avg_number_of_wins_in_100 = xml_dict["root"]["experiment"]["avg_number_of_wins_in_100"]
+    sample_rate = int(xml_dict["root"]["execution_settings"]["sample_rate"])
+    number_of_games = int(xml_dict["root"]["execution_settings"]["number_of_games"])
+    deck_size = int(xml_dict["root"]["game_settings"]["deck_size"])
+    number_of_players = int(xml_dict["root"]["game_settings"]["number_of_players"])
+    number_of_levels = int(xml_dict["root"]["game_settings"]["number_of_levels"])
+    setting_state = int(xml_dict["root"]["execution_settings"]["setting_state"])
+    avg_number_of_wins_in_100_list = []
+    for e in range(0, len(avg_number_of_wins_in_100["item"])):
+        avg_number_of_wins_in_100_list.append(float(avg_number_of_wins_in_100["item"][e]))
+    avg_exp0_samples_list = []
+    if type(avg_exp0_samples['item']) == list:
+        for e in range(0, len(avg_exp0_samples["item"])):
+            avg_exp0_samples_list.append(float(avg_exp0_samples["item"][e]))
+    else:
+        avg_exp0_samples_list.append(float(avg_exp0_samples['item']))
+    game_rounds1 = np.arange(sample_rate, number_of_games + 1, sample_rate).tolist()
+    game_rounds2 = np.arange((10*sample_rate), number_of_games + 1, (10*sample_rate)).tolist()
+    arg = {'avg_exp0_samples_list': avg_exp0_samples_list,
+           'avg_number_of_wins_in_100_list': avg_number_of_wins_in_100_list,
+           'sample_rate': sample_rate,
+           'number_of_games': number_of_games,
+           'deck_size': deck_size,
+           'number_of_players': number_of_players,
+           'number_of_levels': number_of_levels,
+           'setting_state': setting_state,
+           'game_rounds1': game_rounds1,
+           'game_rounds2': game_rounds2
+    }
+    return render(request, 'webapp/results.html', arg)
 
 
 def results(request):
-    return HttpResponse("Hello, world. You're at the polls index.")
+    record_filename = request.GET['record_filename']
+    return redirect('show_the_results', record_filename=record_filename)
 
 
 def analyzer(request):
@@ -71,10 +108,6 @@ def analyzer(request):
 
 
 def __silent_remove(target_file_path):
-    """
-    :param target_file_path: str
-    :return: None or raise an unhandled exception
-    """
     try:
         os.remove(target_file_path)
     except OSError as e:
@@ -83,16 +116,12 @@ def __silent_remove(target_file_path):
 
 
 def __save_uploaded_file(file):
-    """
-    :param file:
-    :return:
-    """
     file_name, file_extension = str(file.name).rsplit('.', 1)
 
     if file_extension != 'xml':
         return None
 
-    file_new_name = f'{file_name.replace(".", "_")}-{random.randint(1, 1000)}.xml'  # make random name for avoid concurrent upload problem
+    file_new_name = "records/"+file_name+".xml"
     FileSystemStorage().save(file_new_name, file)  # save file in BASIC-DIR for getting its size
     file_size = os.stat(file_new_name).st_size
 
@@ -117,7 +146,8 @@ def upload(request):
             is_xml: bool = False
 
         response_data = {
-                'is_xml': is_xml}
+                'is_xml': is_xml,
+                'filename': uploaded_file_name}
 
     return JsonResponse(response_data)
 

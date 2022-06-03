@@ -5,36 +5,51 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <link media="all" type="text/css" rel="stylesheet" href="{% static 'css/dropzone.css' %}">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'css/input_box.css' %}">
     <script language="JavaScript" type="text/javascript" src="{% static 'js/dropzone.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js" type="text/javascript"></script>
 </head>
 <body>
     <div class="main">
         <section class="signup">
             <center>
-                <div id="dropzone">
-                        <form action="/upload/" method="POST" accept-charset="UTF-8" class="dropzone"
-                              id="my-dropzone" enctype="multipart/form-data"><input name="_token" type="hidden"
-                                                                                    value="VsjcIJP304OzNV4lstwbZhujEiaGf6Osczoo4VZP">
+                <article class="l-design-widht">
+                    <div class="card card--inverted">
+                        <div id="dropzone">
+                                <form action="/upload/" method="POST" accept-charset="UTF-8" class="dropzone"
+                                      id="my-dropzone" enctype="multipart/form-data"><input name="_token" type="hidden"
+                                                                                            value="VsjcIJP304OzNV4lstwbZhujEiaGf6Osczoo4VZP">
+                                    {% csrf_token %}
+                                    <!-- Multiple file upload-->
+                                    <div class="dz-message">
+                                        <center>
+                                            <i style="font-size:45px" class="fas fa-cloud-upload-alt"></i>
+                                            <!-- <i style="font-size:45px" class="fa fa-cloud-upload fa-2x"></i> -->
+                                            <h4>Drag your result file </h4>
+                                            <span>or click here</span></center>
+                                    </div>
+                                    <div class="fallback">
+                                        <input name="file" type="file" multiple id="input-file"/>
+                                    </div>
+                                </form>
+                        </div>
+                        <div class="button-group">
                             {% csrf_token %}
-                            <!-- Multiple file upload-->
-                            <div class="dz-message">
-                                <center>
-                                    <i style="font-size:45px" class="fas fa-cloud-upload-alt"></i>
-                                    <!-- <i style="font-size:45px" class="fa fa-cloud-upload fa-2x"></i> -->
-                                    <h4>Drag your result file </h4>
-                                    <span>or click here</span></center>
-                            </div>
-                            <div class="fallback">
-                                <input name="file" type="file" multiple id="input-file"/>
-                            </div>
-                        </form>
-                </div>
+                            <button onclick="" type="submit" name="submit" id="submit"
+                                    style="padding: 20px 100px;"> <a id="results_link" href="results/" style="color: white; font-size: 22px;">Interpretation</a>
+                            </button>
+                        </div>
+                    </div>
+                </article>
             </center>
         </section>
     </div>
-    <script language="javascript">
-        var is_docx;
-
+    <script language="javascript" type="text/javascript">
+        window.onload = function() {
+            $("#submit").hide();
+        };
+        var is_xml;
         Dropzone.options.myDropzone = {
             maxFiles: 1,
             maxFilesize: 13,
@@ -45,21 +60,26 @@
                 this.on("success", function (file, response) {
                     if (this.getQueuedFiles().length === 0) {
                         // Your application has indicated there's an error
-                        var inputstr = file.name;
-                        is_docx = response.is_xml;
-                        if (is_docx == false) {
+                        var record_filename = file.name;
+                        is_xml = response.is_xml;
+                        if (is_xml == false) {
                             alert("فایل خالی است! لطفا دوباره تلاش کنید.");
+                        }
+                        else {
+                            $("#submit").show();
+                            $("#results_link").attr("href", "/results/?record_filename=".concat(record_filename))
                         }
 
                     }
                 });
                 this.on("complete", function (file) {
-                    if (is_docx == false) {
+                    if (is_xml == false) {
                         this.removeFile(file);
                     }
                 });
             }
         };
+
 
 
     </script>

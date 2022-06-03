@@ -34,7 +34,10 @@
         <center>
             <article class="l-design-widht">
               <div class="card">
-                <canvas id="myChart" style="width:100%;max-width:600px"></canvas>
+                <canvas id="winningRate" style="width:100%;max-width:600px"></canvas>
+              </div>
+              <div class="card card--accent">
+                <canvas id="learningWinningRate" style="width:100%;max-width:600px"></canvas>
               </div>
             </article>
 
@@ -48,26 +51,73 @@
 <!--<script src="vendor/jquery/jquery.min.js"></script>-->
 <script src="{% static 'js/main.js' %}"></script>
 <script>
-    var xValues = [50,60,70,80,90,100,110,120,130,140,150];
-    var yValues = [7,8,8,9,9,9,10,11,14,14,15];
 
-    new Chart("myChart", {
+    var avg_exp0_samples = {{ avg_exp0_samples_list }};
+    var avg_number_of_wins_in_100 = {{ avg_number_of_wins_in_100_list }};
+    var sample_rate = {{ sample_rate }};
+    var number_of_games = {{ number_of_games }};
+    var deck_size = {{ deck_size }};
+    var number_of_players = {{ number_of_players }};
+    var number_of_levels = {{ number_of_levels }};
+    var setting_state = {{ setting_state }};
+    var game_rounds1 = {{ game_rounds1 }};
+    var game_rounds2 = {{ game_rounds2 }};
+
+    var xValues1 = game_rounds1;
+    var yValues1 = avg_number_of_wins_in_100;
+    var chart_title1 = 'Results of setting state '.concat(String(setting_state)).concat(' for ').concat(String(sample_rate)).concat(' sampling, deck size ').concat(String(deck_size)).concat(', ').concat(String(number_of_players)).concat(' players in ').concat(String(number_of_levels)).concat(' levels, in ').concat(String(number_of_games)).concat(' games');
+
+    var xValues2 = game_rounds2;
+    var yValues2 = avg_exp0_samples;
+    var chart_title2 = 'Results of setting state '.concat(String(setting_state)).concat(' for ').concat(String(10*sample_rate)).concat(' sampling, deck size ').concat(String(deck_size)).concat(', ').concat(String(number_of_players)).concat(' players in ').concat(String(number_of_levels)).concat(' levels, in ').concat(String(number_of_games)).concat(' games');
+
+    new Chart("winningRate", {
       type: "line",
       data: {
-        labels: xValues,
+        labels: xValues1,
         datasets: [{
           fill: false,
           lineTension: 0,
           backgroundColor: "rgba(0,0,255,1.0)",
           borderColor: "rgba(0,0,255,0.1)",
-          data: yValues
+          data: yValues1
         }]
       },
       options: {
         legend: {display: false},
         scales: {
-          yAxes: [{ticks: {min: 6, max:16}}],
-        }
+          yAxes: [{ticks: {min: 50, max:sample_rate}}, {scaleLabel:{display: true, labelString: "Winning rate"}}],
+          xAxes: [{scaleLabel:{display: true, labelString: "Game rounds"}}],
+        },
+        title: {
+            display: true,
+            text: chart_title1
+        },
+      }
+    });
+
+    new Chart("learningWinningRate", {
+      type: "line",
+      data: {
+        labels: xValues2,
+        datasets: [{
+          fill: false,
+          lineTension: 0,
+          backgroundColor: "rgba(0,0,255,1.0)",
+          borderColor: "rgba(0,0,255,0.1)",
+          data: yValues2
+        }]
+      },
+      options: {
+        legend: {display: false},
+        scales: {
+          yAxes: [{ticks: {min: 50, max:(100)}}, {scaleLabel:{display: true, labelString: "Learning winning rate"}}],
+          xAxes: [{scaleLabel:{display: true, labelString: "Game rounds"}}],
+        },
+        title: {
+            display: true,
+            text: chart_title2
+        },
       }
     });
 </script>
