@@ -385,7 +385,6 @@ class Game:
 
                 # all cards are played or are out
                 else:
-                    # print("end of level!")
                     level_reward = self.level_up()
                     num_of_out += len(self.level_cards)
 
