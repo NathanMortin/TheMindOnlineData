@@ -32,6 +32,10 @@
 <div class="main">
     <section class="signup">
         <center>
+            <div style="margin:30px">
+            </div>
+            <img alt="Brand" src="{% static 'images/The-Mind-Homepage.webp' %}" style="width:150px;height:150px;">
+            <h2 class="form-title" style="color: black; padding-top: 40px;">The Mind Game</h2>
             <article class="l-design-widht">
               <div class="card">
                 <canvas id="winningRate" style="width:100%;max-width:600px"></canvas>
@@ -39,11 +43,40 @@
               <div class="card card--accent">
                 <canvas id="learningWinningRate" style="width:100%;max-width:600px"></canvas>
               </div>
+                <div class="card">
+                        <h4 id="common_pay_off"></h4>
+                        <h4 id="time_distortion"></h4>
+                        <h4 id="reset_level_time"></h4>
+                        <h4 id="decreasing_exp"></h4>
+                        <h4 id="last_games_with_exp0"></h4>
+                        <br>
+                        <h4 id="winning_rate"></h4>
+                        <h4 id="winning_rate_with_exploration_rate_0"></h4>
+                        <h4 id="avg_num_of_correct_play"></h4>
+                        <h4 id="avg_learning_wins"></h4>
+                        <h4 id="avg_number_of_losses"></h4>
+                        <h4 id="avg_number_of_wins"></h4>
+                        <br>
+                </div>
+                <div class="card card--inverted">
+                    <p>Play around with the colors</p>
+                    <input type="color" data-color="light" value="#ffffff" />
+                    <input type="color" data-color="dark" value="#212121" />
+                    <input type="color" data-color="signal" value="#fab700" />
+                </div>
             </article>
-
         </center>
     </section>
-
+    <svg xmlns="http://www.w3.org/2000/svg" class="hidden">
+  <symbol id="icon-coffee" viewBox="0 0 20 20">
+    <title>icon-coffee</title>
+    <path fill="currentColor" d="M15,17H14V9h3a3,3,0,0,1,3,3h0A5,5,0,0,1,15,17Zm1-6v3.83A3,3,0,0,0,18,12a1,1,0,0,0-1-1Z"/>
+    <rect fill="currentColor" x="1" y="7" width="15" height="12" rx="3" ry="3"/>
+    <path fill="var(--color-accent)" d="M7.07,5.42a5.45,5.45,0,0,1,0-4.85,1,1,0,0,1,1.79.89,3.44,3.44,0,0,0,0,3.06,1,1,0,0,1-1.79.89Z"/>
+    <path fill="var(--color-accent)" d="M3.07,5.42a5.45,5.45,0,0,1,0-4.85,1,1,0,0,1,1.79.89,3.44,3.44,0,0,0,0,3.06,1,1,0,1,1-1.79.89Z"/>
+    <path fill="var(--color-accent)" d="M11.07,5.42a5.45,5.45,0,0,1,0-4.85,1,1,0,0,1,1.79.89,3.44,3.44,0,0,0,0,3.06,1,1,0,1,1-1.79.89Z"/>
+  </symbol>
+</svg>
 </div>
 
 
@@ -63,13 +96,27 @@
     var game_rounds1 = {{ game_rounds1 }};
     var game_rounds2 = {{ game_rounds2 }};
 
+    var winning_rate = {{ winning_rate }};
+    var winning_rate_with_exploration_rate_0 = {{ winning_rate_with_exploration_rate_0 }};
+    var avg_num_of_correct_play = {{ avg_num_of_correct_play }};
+    var avg_learning_wins = {{ avg_learning_wins }};
+    var avg_number_of_losses = {{ avg_number_of_losses }};
+    var avg_number_of_wins = {{ avg_number_of_wins }};
+
+    var number_of_lives = {{ number_of_lives }};
+    var last_games_with_exp0 = {{ last_games_with_exp0 }};
+    var common_pay_off = String({{ common_pay_off }});
+    var time_distortion = String({{ time_distortion }});
+    var decreasing_exp = String({{ decreasing_exp }});
+    var reset_level_time = String({{ reset_level_time }});
+
     var xValues1 = game_rounds1;
     var yValues1 = avg_number_of_wins_in_100;
-    var chart_title1 = 'Results of setting state '.concat(String(setting_state)).concat(' for ').concat(String(sample_rate)).concat(' sampling, deck size ').concat(String(deck_size)).concat(', ').concat(String(number_of_players)).concat(' players in ').concat(String(number_of_levels)).concat(' levels, in ').concat(String(number_of_games)).concat(' games');
+    var chart_title1 = 'Results of setting state '.concat(String(setting_state)).concat(' for sampling rate ').concat(String(sample_rate)).concat(' , deck size ').concat(String(deck_size)).concat(', ').concat(String(number_of_players)).concat(' players in ').concat(String(number_of_levels)).concat(' levels, in ').concat(String(number_of_games)).concat(' games').concat(" and ").concat(String(number_of_lives).concat(" lives"));
 
     var xValues2 = game_rounds2;
     var yValues2 = avg_exp0_samples;
-    var chart_title2 = 'Results of setting state '.concat(String(setting_state)).concat(' for ').concat(String(10*sample_rate)).concat(' sampling, deck size ').concat(String(deck_size)).concat(', ').concat(String(number_of_players)).concat(' players in ').concat(String(number_of_levels)).concat(' levels, in ').concat(String(number_of_games)).concat(' games');
+    var chart_title2 = 'Results of setting state '.concat(String(setting_state)).concat(' for sampling rate ').concat(String(10*sample_rate)).concat(' , deck size ').concat(String(deck_size)).concat(', ').concat(String(number_of_players)).concat(' players in ').concat(String(number_of_levels)).concat(' levels, in ').concat(String(number_of_games)).concat(' games').concat(" and ").concat(String(number_of_lives).concat(" lives"));
 
     new Chart("winningRate", {
       type: "line",
@@ -120,6 +167,19 @@
         },
       }
     });
+
+    document.getElementById("last_games_with_exp0").textContent=("\nnumber of last games with exp0: " .concat(String(last_games_with_exp0)));
+    document.getElementById("common_pay_off").textContent=("\ncommon pay off: " .concat(common_pay_off));
+    document.getElementById("time_distortion").textContent=("\ntime distortion: " .concat(time_distortion));
+    document.getElementById("decreasing_exp").textContent=("\ndecreasing exploration rate: " .concat(decreasing_exp));
+    document.getElementById("reset_level_time").textContent=("\nreset level time: " .concat(reset_level_time));
+
+    document.getElementById("winning_rate").textContent = "winning rate: " .concat(String(winning_rate));
+    document.getElementById("winning_rate_with_exploration_rate_0").textContent = ("\nwinning rate with exploration rate 0: " .concat(String(winning_rate_with_exploration_rate_0)));
+    document.getElementById("avg_num_of_correct_play").textContent=("\naverage num of correct play: " .concat(String(avg_num_of_correct_play)));
+    document.getElementById("avg_learning_wins").textContent=("\naverage learning wins: " .concat(String(avg_learning_wins)));
+    document.getElementById("avg_number_of_losses").textContent=("\naverage number of losses: " .concat(String(avg_number_of_losses)));
+    document.getElementById("avg_number_of_wins").textContent=("\naverage number of wins: " .concat(String(avg_number_of_wins)));
 </script>
 <script language="javascript">
     let timer;

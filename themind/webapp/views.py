@@ -19,6 +19,18 @@ def index(request):
     return render(request, 'webapp/index.html')
 
 
+def q_learning(request):
+    return render(request, 'webapp/q_learning.html')
+
+
+def q_learning_process(request):
+    return render(request, 'webapp/q_learning_process.html')
+
+
+def online_game(request):
+    return render(request, 'webapp/online_game.html')
+
+
 def run_the_code(request):
     record = {"status": 0}
     if request.method == 'POST':
@@ -39,12 +51,13 @@ def run_the_code(request):
         decreasing_exp = True if (request.POST['decreasing_exp'] == "True") else False
         reset_level_time = True if (request.POST['reset_level_time'] == "True") else False
 
-        game_settings = {"list_of_num_of_players": list_of_num_of_players,
-                         "list_of_deck_size": list_of_deck_size,
-                         "list_of_setting_states": list_of_setting_states,
-                         "number_of_levels": number_of_levels,
+        console_settings = {"list_of_num_of_players": list_of_num_of_players,
+                            "list_of_deck_size": list_of_deck_size,
+                            "list_of_setting_states": list_of_setting_states}
+
+        game_settings = {"number_of_levels": number_of_levels,
                          "number_of_lives": number_of_lives
-                              }
+                         }
 
         execution_settings = {"number_of_games": number_of_games,
                               "common_pay_off": common_pay_off,
@@ -54,9 +67,9 @@ def run_the_code(request):
                               "time_distortion": time_distortion,
                               "decreasing_exp": decreasing_exp,
                               "reset_level_time": reset_level_time
-                                   }
+                              }
 
-        record = MainBoard.run_code(game_settings, execution_settings)
+        record = MainBoard.run_code(console_settings, game_settings, execution_settings)
         record["status"] = 1
     return JsonResponse(record)
 
@@ -84,6 +97,21 @@ def show_the_results(request, record_filename="saa"):
         avg_exp0_samples_list.append(float(avg_exp0_samples['item']))
     game_rounds1 = np.arange(sample_rate, number_of_games + 1, sample_rate).tolist()
     game_rounds2 = np.arange((10*sample_rate), number_of_games + 1, (10*sample_rate)).tolist()
+
+    winning_rate = xml_dict["root"]["experiment"]["winning_rate"]
+    winning_rate_with_exploration_rate_0 = xml_dict["root"]["experiment"]["winning_rate_with_exploration_rate_0"]
+    avg_num_of_correct_play = xml_dict["root"]["experiment"]["avg_num_of_correct_play"]
+    avg_learning_wins = xml_dict["root"]["experiment"]["avg_learning_wins"]
+    avg_number_of_losses = xml_dict["root"]["experiment"]["avg_number_of_losses"]
+    avg_number_of_wins = xml_dict["root"]["experiment"]["avg_number_of_wins"]
+
+    number_of_lives = int(xml_dict["root"]["game_settings"]["number_of_lives"])
+    last_games_with_exp0 = int(xml_dict["root"]["execution_settings"]["last_games_with_exp0"])
+    common_pay_off = 'true' if (xml_dict["root"]["execution_settings"]["common_pay_off"]) == 'True' else 'false'
+    time_distortion = 'true' if (xml_dict["root"]["execution_settings"]["time_distortion"]) == 'True' else 'false'
+    decreasing_exp = 'true' if (xml_dict["root"]["execution_settings"]["decreasing_exp"]) == 'True' else 'false'
+    reset_level_time = 'true' if (xml_dict["root"]["execution_settings"]["reset_level_time"]) == 'True' else 'false'
+
     arg = {'avg_exp0_samples_list': avg_exp0_samples_list,
            'avg_number_of_wins_in_100_list': avg_number_of_wins_in_100_list,
            'sample_rate': sample_rate,
@@ -93,8 +121,20 @@ def show_the_results(request, record_filename="saa"):
            'number_of_levels': number_of_levels,
            'setting_state': setting_state,
            'game_rounds1': game_rounds1,
-           'game_rounds2': game_rounds2
-    }
+           'game_rounds2': game_rounds2,
+           'winning_rate': winning_rate,
+           'winning_rate_with_exploration_rate_0': winning_rate_with_exploration_rate_0,
+           'avg_num_of_correct_play': avg_num_of_correct_play,
+           'avg_learning_wins': avg_learning_wins,
+           'avg_number_of_losses': avg_number_of_losses,
+           'avg_number_of_wins': avg_number_of_wins,
+           'number_of_lives': number_of_lives,
+           'last_games_with_exp0': last_games_with_exp0,
+           'common_pay_off': common_pay_off,
+           'time_distortion': time_distortion,
+           'decreasing_exp': decreasing_exp,
+           'reset_level_time': reset_level_time
+           }
     return render(request, 'webapp/results.html', arg)
 
 
