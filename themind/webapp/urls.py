@@ -13,6 +13,7 @@ urlpatterns = [
     path('results/', views.results, name="results"),
     path('results/record_filename<str:record_filename>', views.results, name="results"),
     path('analyzer/', views.analyzer),
-    path('upload/', views.upload)
+    path('upload/', views.upload),
+    path('play_game/', views.play_game, name="play_game")
 ]
 

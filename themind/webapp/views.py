@@ -192,3 +192,7 @@ def upload(request):
     return JsonResponse(response_data)
 
 
+def play_game(request):
+    return render(request, 'webapp/play_game.html')
+
+
