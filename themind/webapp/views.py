@@ -13,6 +13,8 @@ from .analyzer import Analyzer
 import numpy as np
 BASE_DIR = settings.BASE_DIR
 
+from webapp.models import Game, Agent
+
 
 def index(request):
     # return HttpResponse("Hello, world. You're at the polls index.")
@@ -193,6 +195,53 @@ def upload(request):
 
 
 def play_game(request):
-    return render(request, 'webapp/play_game.html')
+    arg = {}
+    if request.method == 'POST':
+        number_of_players = int(request.POST['number_of_players'])
+        deck_size = int(request.POST['deck_size'])
+        setting_state = int(request.POST['setting_state'])
+        number_of_levels = int(request.POST['number_of_levels'])
+        number_of_lives = int(request.POST['number_of_lives'])
+        common_pay_off = True if (request.POST['common_pay_off'] == "True") else False
+        time_distortion = True if (request.POST['time_distortion'] == "True") else False
+        decreasing_exp = True if (request.POST['decreasing_exp'] == "True") else False
+        reset_level_time = True if (request.POST['reset_level_time'] == "True") else False
+
+        game_settings = {"number_of_levels": number_of_levels,
+                         "number_of_lives": number_of_lives,
+                         "number_of_players": number_of_players,
+                         "deck_size": deck_size
+                         }
+
+        execution_settings = {"common_pay_off": common_pay_off,
+                              "time_distortion": time_distortion,
+                              "decreasing_exp": decreasing_exp,
+                              "reset_level_time": reset_level_time,
+                              "setting_state": setting_state
+                              }
+        current_settings = {}
+        players_settings = {}
+
+        simulator = MainBoard.play_game(game_settings, execution_settings, current_settings, players_settings)
+        ## DB
+
+        # new_game = Game.objects.create(number_of_players=number_of_players, deck_size=deck_size,
+        #                                number_of_levels=number_of_levels, deck=simulator["deck"],
+        #                                game_time=simulator["game_time"], level_time=simulator["level_time"],
+        #                                current_card=simulator["current_card"], current_level=simulator["current_level"],
+        #                                number_of_lives=simulator["number_of_lives"],
+        #                                number_of_throwing_stars=simulator["number_of_throwing_stars"],
+        #                                level_cards=simulator["level_cards"], players_cards=simulator["players_cards"],
+        #                                players_main_actions=simulator["players_main_actions"],
+        #                                players_secondary_actions=simulator["players_secondary_actions"],
+        #                                players_throwing_star_flag=simulator["players_throwing_star_flag"],
+        #                                players_out_index=simulator["players_out_index"])
+        # for i in range(number_of_players):
+        #     new_agent = Agent.objects.create(game_id=new_game.game_id, cards= , )
+        # arg["game_id"] = new_game.game_id
+        # document_setting = DocumentSetting.objects.create(user=user, document=thesis)
+        ##
+
+    return render(request, 'webapp/play_game.html', arg)
 
 

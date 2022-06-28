@@ -129,8 +129,8 @@
             <div class="card">
             <div class="button-group">
                 {% csrf_token %}
-                        <button type="submit" name="submit" id="submit"
-                                style="padding: 20px 100px;">  <a href="/play_game/" style="color: black;"> Start! </a>
+                        <button onclick="playGame();" type="submit" name="submit" id="submit"
+                                style="padding: 20px 100px;">  Start! <!--<a href="/play_game/" style="color: black;"> Start! </a>-->
                         </button>
 
                 <!--<a id="results_link2" href="/results?filename=sara">**PLOT RESULTS CHART**</a>-->
@@ -212,6 +212,42 @@
             }
         }
     });
+    
+    function playGame() {
+        var number_of_players = $('#number_of_players').val();
+        var deck_size = $('#deck_size').val();
+        var setting_state = $('#setting_state').val();
+
+        var number_of_levels = $('#number_of_levels').val();
+        var number_of_lives = $('#number_of_lives').val();
+
+        var common_pay_off = $("input[name=common_pay_off]:checked").val();
+        var time_distortion = $("input[name=time_distortion]:checked").val();
+        var decreasing_exp = $("input[name=decreasing_exp]:checked").val();
+        var reset_level_time = $("input[name=reset_level_time]:checked").val();
+
+            $.ajax({
+                //headers: {"X-CSRFToken": token},
+                type: 'POST',
+                url: '/play_game/',
+                data: {
+                    number_of_players: number_of_players,
+                    deck_size: deck_size,
+                    setting_state: setting_state,
+                    number_of_levels: number_of_levels,
+                    number_of_lives: number_of_lives,
+                    common_pay_off: common_pay_off,
+                    time_distortion: time_distortion,
+                    decreasing_exp: decreasing_exp,
+                    reset_level_time: reset_level_time
+
+                },
+                success: function (data)
+                {
+
+                }
+            });
+    }
 
 
 </script>

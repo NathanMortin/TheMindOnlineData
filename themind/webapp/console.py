@@ -171,3 +171,11 @@ class Console:
         elapsed_time = running_time.stop()
         print(elapsed_time)
         return self.record
+
+    def play_game(self, current_settings, players_settings):
+        simulator = Game(self.game_settings)
+        simulator.set_game_state(current_settings, players_settings)
+        return simulator.play_game(self.execution_settings)
+
+
+

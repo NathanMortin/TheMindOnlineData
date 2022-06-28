@@ -46,6 +46,11 @@ class MainBoard:
         the_mind_console = Console(game_setup)
         return the_mind_console.run()
 
+    @staticmethod
+    def play_game(game_settings, execution_settings, current_settings, players_settings):
+        game_setup = [{}, game_settings, execution_settings]
+        the_mind_console = Console(game_setup)
+        return the_mind_console.play_game(current_settings, players_settings)
 
 
 

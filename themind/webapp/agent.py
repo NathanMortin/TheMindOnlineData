@@ -20,6 +20,7 @@ class Agent:
         self.gamma = 0.99
         self.alpha = 0.01
         self.last_exploration_rate = 0.5
+        self.last_table = []
         self.step_cost = -0.01
         self.cumulative_reward = 0
 
@@ -54,11 +55,18 @@ class Agent:
         self.last_exploration_rate = self.exploration_rate
         self.exploration_rate = e
 
+    def set_table(self, t):
+        self.last_table = self.table
+        self.table = t
+
     def get_exploration_rate(self):
         return self.exploration_rate
 
     def get_last_exploration_rate(self):
         return self.last_exploration_rate
+
+    def get_last_table(self):
+        return self.last_table
 
     def get_cards(self):
         return self.cards

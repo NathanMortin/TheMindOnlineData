@@ -14,6 +14,7 @@ urlpatterns = [
     path('results/record_filename<str:record_filename>', views.results, name="results"),
     path('analyzer/', views.analyzer),
     path('upload/', views.upload),
+    # path('start_game/', views.start_game, name="start_game"),
     path('play_game/', views.play_game, name="play_game")
 ]
 

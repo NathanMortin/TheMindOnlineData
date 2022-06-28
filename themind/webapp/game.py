@@ -392,8 +392,7 @@ class Game:
                 self.game_time += 1
 
             # end of game
-            if game_i == 17:
-                a = 1
+
             # print("game_result: ", game_result)
             if (not exp0_flag and game_i < (number_of_games-last_games_with_exp0)) and decreasing_exp:
                 for i in range(self.number_of_players):
@@ -429,6 +428,7 @@ class Game:
                 # make all exploration rates 0
                 for i in range(self.number_of_players):
                     self.players[i].set_exploration_rate(0)
+                    self.players[i].set_table(self.players[i].get_table().copy())
                 last_game_i = game_i
                 exp0_flag = True
                 # if game_i % sample_rate == (sample_rate - 1):
@@ -448,6 +448,7 @@ class Game:
                 # make all exploration rates 0
                 for i in range(self.number_of_players):
                     self.players[i].set_exploration_rate(self.players[i].get_last_exploration_rate())
+                    self.players[i].set_table(self.players[i].get_last_table().copy())
                 exp0_flag = False
                 sum_exp0_samples = sum(exp0_samples)
                 list_of_exp0_samples.append(sum_exp0_samples)
@@ -490,3 +491,271 @@ class Game:
 
         # distribute cards and make game ready
         self.distribute_cards()
+
+    def set_game_state(self, current_settings, players_settings):
+        self.deck = current_settings["deck"]
+        self.game_time = current_settings["game_time"]
+        self.level_time = current_settings["level_time"]
+        self.current_card = current_settings["current_card"]
+        self.current_level = current_settings["current_level"]
+        self.number_of_lives = current_settings["number_of_lives"]
+        self.number_of_throwing_stars = current_settings["number_of_throwing_stars"]
+        self.level_cards = current_settings["level_cards"]
+        self.players_cards = current_settings["players_cards"]
+        self.players_main_actions = current_settings["players_main_actions"]
+        self.players_secondary_actions = current_settings["players_secondary_actions"]
+        self.players_throwing_star_flag = current_settings["players_throwing_star_flag "]
+        self.players_out_index = current_settings["players_out_index"]
+
+    def play_game(self, execution_settings):
+        # execution settings
+        common_pay_off = execution_settings["common_pay_off"]
+        setting_state = execution_settings["setting_state"]
+        time_distortion = execution_settings["time_distortion"]
+        decreasing_exp = execution_settings["decreasing_exp"]
+        reset_level_time = execution_settings["reset_level_time"]
+        result = {}
+        result["deck"] = self.deck
+        result["game_time"] = self.game_time
+        result["level_time"] = self.level_time
+        result["current_card"] = self.current_card
+        result["current_level"] = self.current_level
+        result["number_of_lives"] = self.number_of_lives
+        result["number_of_throwing_stars"] = self.number_of_throwing_stars
+        result["level_cards"] = self.level_cards
+        result["players_cards"] = self.players_cards
+        result["players_main_actions"] = self.players_main_actions
+        result["players_secondary_actions"] = self.players_secondary_actions
+        result["players_throwing_star_flag"] = self.players_throwing_star_flag
+        result["players_out_index"] = self.players_out_index
+        # for i in range(self.number_of_players):
+        #     result["cards"]
+        #     result["cards"]
+
+        # results initialization
+        # game_result = True
+        #
+        # # Each agent has a characteristic which is mu (a random number between 1 to 4)
+        # if time_distortion:
+        #     for i in range(self.number_of_players):
+        #         self.players[i].set_clock_mu(random.randint(1, 4))
+        #
+        # if decreasing_exp:
+        #     for i in range(self.number_of_players):
+        #         self.players[i].set_decreasing_exp_rate(self.players[i].get_exploration_rate() /
+        #                                                 (number_of_games + number_of_games / 10))
+        #
+        # # execution of games
+        # while game_i in range(number_of_games):
+        #
+        #     # update number of cards which are not played
+        #     num_of_out += len(self.level_cards)
+        #
+        #     # play until win (complete the levels) or loose (have no life)
+        #     while self.number_of_lives > 0 and self.current_level <= self.number_of_levels:
+        #         game_result = True  # default assumption for game result in this cycle
+        #
+        #         # check agents have cards
+        #         if len(self.level_cards):
+        #
+        #             players_main_actions = []
+        #             players_secondary_actions = []
+        #
+        #             # decision
+        #             for i in range(self.number_of_players):
+        #
+        #                 # check that agent has at least one card
+        #                 if i in self.players_out_index:
+        #                     players_main_actions.insert(i, Action.NO_ACTION)
+        #                     players_secondary_actions.insert(i, Action.NO_ACTION)
+        #                     continue
+        #
+        #                 main_act, secondary_act = self.players[i].make_decision(self.current_card, self.deck_size,
+        #                                                                         self.players[i].get_current_time(),
+        #                                                                         self.players_throwing_star_flag,
+        #                                                                         self.get_number_of_other_players_cards(
+        #                                                                             i),
+        #                                                                         self.players_main_actions[i],
+        #                                                                         self.players_secondary_actions[i],
+        #                                                                         setting_state)
+        #                 main_act = Action(main_act)
+        #                 secondary_act = Action(secondary_act)
+        #                 players_main_actions.insert(i, main_act)
+        #                 players_secondary_actions.insert(i, secondary_act)
+        #
+        #             # shuffle players' turn
+        #             players_index = list(range(self.number_of_players))
+        #             random.shuffle(players_index)
+        #
+        #             # check request for using throwing star card
+        #             # for i in range(self.number_of_players):
+        #             #     secondary_act = players_secondary_actions[i]
+        #             #     if secondary_act == Action.TURN_ON_THROWING_STAR_CARD:
+        #             #         self.players_throwing_star_flag[i] = True
+        #             #     else:
+        #             #         self.players_throwing_star_flag[i] = False
+        #             # throwing_used = self.throwing_star_process()
+        #             # if throwing_used:
+        #             #     f.write("\t\t\t && Throwing star card is used! &&\n")
+        #
+        #             # run players' action
+        #             for i in players_index:
+        #
+        #                 # check that agent has at least one card
+        #                 if i in self.players_out_index:
+        #                     continue
+        #
+        #                 # action PLAY
+        #                 if players_main_actions[i] == Action.PLAY:
+        #
+        #                     # check agent has card (because of throwing star card, empty hand may be happened)
+        #                     if len(self.players_cards[i]) > 0:
+        #                         min_card = self.players[i].play_card()  # run playing card
+        #                         result = self.verification(i, min_card)  # check that agent played correctly or wrongly
+        #
+        #                         # calculating the reward in non common pay off mode
+        #                         if not common_pay_off:
+        #                             reward = self.players[i].get_reward(result)  # get reward +1 or -1
+        #                             self.players[i].set_current_reward(reward)  # set the reward
+        #
+        #                         # check that agent played correctly or not
+        #                         if not result:
+        #                             game_result = False  # stop the game if one agent played wrongly
+        #                             num_of_wrong += 1  # add 1 to number of cards which are played wrongly
+        #                             break
+        #                         else:
+        #                             num_of_correct += 1  # add 1 to number of cards which are played correctly
+        #
+        #                 # action WAIT
+        #                 else:
+        #                     self.players[i].wait()
+        #
+        #             # calculating the reward in non common pay off mode & reset the level time for eah agent if needed
+        #             if common_pay_off:
+        #                 if Action.PLAY in players_main_actions:  # if one player played a card
+        #                     for p in self.players:
+        #
+        #                         # check that agent has at least one card
+        #                         if p.player_id in self.players_out_index:
+        #                             continue
+        #
+        #                         p.set_current_reward(p.get_reward(game_result))  # set the reward based on the result
+        #
+        #                         if reset_level_time:
+        #                             p.reset_current_time()
+        #
+        #             # update the table of agent who played or waited
+        #             for i in range(self.number_of_players):
+        #
+        #                 # check that agent has at least one card
+        #                 if i in self.players_out_index:
+        #                     continue
+        #
+        #                 self.players[i].set_next_state(self.current_card, self.deck_size,
+        #                                                self.players[i].get_next_time(),
+        #                                                self.players_throwing_star_flag,
+        #                                                self.get_number_of_other_players_cards(i),
+        #                                                setting_state)
+        #
+        #                 # check whether the agent could play or wait and the game was not stopped
+        #                 if self.players[i].get_played():
+        #                     self.players[i].update_table()  # update Q-table
+        #
+        #                 # check that agent has at least one card
+        #                 if len(self.players_cards[i]) == 0:
+        #                     self.players_out_index.append(i)
+        #
+        #             # increment level time
+        #             self.level_time += 1
+        #
+        #             for i in range(self.number_of_players):
+        #                 self.players[i].add_to_current_time()
+        #                 # self.players[i].add_to_current_time1()
+        #                 # self.players[i].add_to_current_time2()
+        #                 # self.players[i].add_to_current_time3(self.level_time)
+        #                 # self.players[i].add_to_current_time4(self.level_time)
+        #
+        #         # all cards are played or are out
+        #         else:
+        #             level_reward = self.level_up()
+        #             num_of_out += len(self.level_cards)
+        #
+        #         # increase game time
+        #         self.game_time += 1
+        #
+        #     # end of game
+        #     if game_i == 17:
+        #         a = 1
+        #     # print("game_result: ", game_result)
+        #     if (not exp0_flag and game_i < (number_of_games - last_games_with_exp0)) and decreasing_exp:
+        #         for i in range(self.number_of_players):
+        #             self.players[i].set_exploration_rate(
+        #                 self.players[i].get_exploration_rate() - self.players[i].get_decreasing_exp_rate())
+        #
+        #     # check the starting of the last games with zero exploitation
+        #     if game_i == (number_of_games - last_games_with_exp0 - 1):
+        #         for j in range(self.number_of_players):
+        #             self.players[j].set_exploration_rate(0)  # set exploration rate equal to zero for all agents
+        #
+        #     # check the game counter during the last games with zero exploitation
+        #     if game_i >= (number_of_games - last_games_with_exp0):
+        #
+        #         # winning if there is at least one life (with zero exploration rate)
+        #         if self.number_of_lives > 0:
+        #             learning_wins += 1
+        #
+        #     # winning if there is at least one life
+        #     # if not exp0_flag:
+        #     if self.number_of_lives > 0:
+        #         self.number_of_wins += 1
+        #         sample_wins += 1
+        #
+        #     # losing if there is no remaining life
+        #     else:
+        #         self.number_of_losses += 1
+        #
+        #     if exp0_flag:
+        #         exp0_samples.append(int(game_result))
+        #
+        #     if game_i % (10 * sample_rate) == ((10 * sample_rate) - sample_rate - 1):
+        #         # make all exploration rates 0
+        #         for i in range(self.number_of_players):
+        #             self.players[i].set_exploration_rate(0)
+        #         last_game_i = game_i
+        #         exp0_flag = True
+        #         # if game_i % sample_rate == (sample_rate - 1):
+        #         list_of_sample_wins.append(sample_wins)  # append number of wins in sample range
+        #         sample_wins = 0  # reset sample wins counter
+        #         # else:
+        #         #     a = 1
+        #
+        #     # check game counter is equal to sample rate
+        #     if (not exp0_flag or game_i >= (number_of_games - last_games_with_exp0)) and game_i % sample_rate == (
+        #             sample_rate - 1) and not (game_i % (10 * sample_rate) == ((10 * sample_rate) - sample_rate - 1)):
+        #         list_of_sample_wins.append(sample_wins)  # append number of wins in sample range
+        #         sample_wins = 0  # reset sample wins counter
+        #
+        #     if exp0_flag and game_i == last_game_i + sample_rate:
+        #         if game_i != (number_of_games - 1):
+        #             game_i = last_game_i
+        #         # make all exploration rates 0
+        #         for i in range(self.number_of_players):
+        #             self.players[i].set_exploration_rate(self.players[i].get_last_exploration_rate())
+        #         exp0_flag = False
+        #         sum_exp0_samples = sum(exp0_samples)
+        #         list_of_exp0_samples.append(sum_exp0_samples)
+        #         exp0_samples = []
+        #         sample_wins = 0
+        #
+        #     # restart game
+        #     self.restart_game()
+        #     game_i += 1
+        #
+        # # update number of out card
+        # num_of_out -= (num_of_wrong + num_of_correct)
+        #
+        # return [self.number_of_wins, self.number_of_losses, learning_wins, list_of_sample_wins, list_of_exp0_samples,
+        #         [num_of_correct, num_of_wrong, num_of_out]]
+        return result
+
+
